@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.nanter1986.fieldcontrol.AdsController;
 import com.nanter1986.fieldcontrol.DisplayToolkit;
 import com.nanter1986.fieldcontrol.FieldControl;
+import com.nanter1986.fieldcontrol.buttons.FloorTile;
 import com.nanter1986.fieldcontrol.pawns.Archer;
 import com.nanter1986.fieldcontrol.pawns.Knight;
 import com.nanter1986.fieldcontrol.pawns.Ninja;
@@ -26,16 +27,19 @@ public class GameplayScreen implements Screen {
     FieldControl game;
     DisplayToolkit tool;
     AdsController adsController;
-    private final Texture floortile = new Texture(Gdx.files.internal("tile.png"));
+
     private float tileHeight;
     ArrayList<Pawn> pawns;
-    private boolean actionSelect=false;
+    private boolean actionSelect = false;
+
+    ArrayList<FloorTile> floor;
 
     public GameplayScreen(FieldControl game, AdsController adsController) {
         this.adsController = adsController;
         this.game = game;
         this.tool = new DisplayToolkit(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         this.tileHeight = tool.scW / 5;
+
 
     }
 
@@ -51,36 +55,43 @@ public class GameplayScreen implements Screen {
     @Override
     public void show() {
         pawns = new ArrayList<Pawn>();
+        floor = new ArrayList<FloorTile>();
         pawns.add(new Knight(0, 0, tool));
         pawns.add(new Archer(1, 1, tool));
         pawns.add(new Ninja(2, 1, tool));
         pawns.add(new Shield(1, 2, tool));
+
+        makeFloor();
     }
 
     @Override
     public void render(float delta) {
         for (Pawn p : pawns) {
-            if (p.selected) {
-                actionSelect=true;
-            }
-        }
+            if (p.isTouched() && p.selected) {
+                customLog("here");
+                p.selected = false;
+                actionSelect = false;
+                break;
+            } else if (p.isTouched()) {
+                customLog("here2");
+                p.selected = true;
+                actionSelect = true;
+                break;
+            } else if (actionSelect) {
+                for (FloorTile f : floor) {
+                    if (f.isButtonTouched()) {
+                        if (p.selected) {
+                            customLog("here3");
+                            p.positionX = f.buttonX;
+                            p.positionY = f.buttonY;
+                            p.selected = false;
+                            actionSelect = false;
+                        }
 
-        if(!actionSelect){
-            for (Pawn p : pawns) {
-                if (p.isTouched()) {
-                    p.selected = true;
-                    break;
+                    }
                 }
             }
-        }else{
-            for (Pawn p : pawns) {
-                if (p.isTouched() && p.selected) {
-                    p.selected = false;
-                    break;
-                }
-            }
         }
-
 
 
         tool.camera.update();
@@ -89,7 +100,9 @@ public class GameplayScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         tool.batch.setProjectionMatrix(tool.camera.combined);
         tool.batch.begin();
-        makeFloor();
+        for (FloorTile f : floor) {
+            f.appear();
+        }
         for (Pawn p : pawns) {
             p.appear();
         }
@@ -98,8 +111,10 @@ public class GameplayScreen implements Screen {
 
     private void makeFloor() {
         for (int i = 0; i < 5; i++) {
-            for (int j = 1; j < 6; j++) {
-                tool.batch.draw(floortile, tileHeight * i, tool.scH - tileHeight * j, tileHeight, tileHeight);
+            for (int j = 0; j < 5; j++) {
+                int x = i;
+                int y = j;
+                floor.add(new FloorTile(tool, x, y));
             }
         }
 
@@ -128,5 +143,9 @@ public class GameplayScreen implements Screen {
     @Override
     public void dispose() {
 
+    }
+
+    public void customLog(String m) {
+        Gdx.app.log("myLog", m);
     }
 }

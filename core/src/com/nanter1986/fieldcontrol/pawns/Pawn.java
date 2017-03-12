@@ -1,6 +1,7 @@
 package com.nanter1986.fieldcontrol.pawns;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.nanter1986.fieldcontrol.DisplayToolkit;
@@ -34,7 +35,14 @@ public abstract class Pawn {
     public void appear(){
         double realX=(tool.scW/5)*(positionX+0.5);
         double realY=(tool.scH-tool.scW)+(tool.scW/5)*(positionY)+(tool.scW/5)*0.5;
-        tool.batch.draw(texture,(int)realX-width/2,(int)realY-width/2,width,width);
+        if(selected){
+            tool.batch.setColor(Color.RED);
+            tool.batch.draw(texture,(int)realX-width/2,(int)realY-width/2,width,width);
+            tool.batch.setColor(Color.WHITE);
+        }else{
+            tool.batch.draw(texture,(int)realX-width/2,(int)realY-width/2,width,width);
+        }
+
 
     }
 
@@ -48,7 +56,6 @@ public abstract class Pawn {
         double rightWall=realX+width/2;
         double topWall=tool.scH-realY-width/2;
         double bottomWall=tool.scH-realY+width/2;
-        //Gdx.app.log("a",x+" "+y+" "+leftWall+" "+rightWall+" "+topWall+" "+bottomWall);
         if(Gdx.input.justTouched() &&
                 x>leftWall &&
                 x<rightWall &&
