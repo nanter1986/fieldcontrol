@@ -13,6 +13,7 @@ import com.nanter1986.fieldcontrol.pawns.Knight;
 import com.nanter1986.fieldcontrol.pawns.Ninja;
 import com.nanter1986.fieldcontrol.pawns.Pawn;
 import com.nanter1986.fieldcontrol.pawns.Shield;
+import com.nanter1986.fieldcontrol.pawns.Wizard;
 
 import java.util.ArrayList;
 
@@ -58,6 +59,7 @@ public class GameplayScreen implements Screen {
         pawns.add(new Archer(1, 1, tool));
         pawns.add(new Ninja(2, 1, tool));
         pawns.add(new Shield(1, 2, tool));
+        pawns.add(new Wizard(1, 3, tool));
 
         makeFloor();
     }
@@ -83,12 +85,10 @@ public class GameplayScreen implements Screen {
     private void controlCheck() {
         for (Pawn p : pawns) {
             if (p.isTouched() && p.selected) {
-                customLog("here");
                 p.selected = false;
                 actionSelect = false;
                 break;
             } else if (p.isTouched()&&actionSelect == false) {
-                customLog("here2");
                 p.selected = true;
                 actionSelect = true;
                 break;
