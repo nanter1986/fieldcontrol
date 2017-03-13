@@ -95,48 +95,101 @@ public class GameplayScreen implements Screen {
     }
 
     private void moveByAI() {
-        for (Pawn aiPawn : pawns) {
-            for(Pawn playerPawn: pawns){
-                if((playerPawn.friendly&&
-                        aiPawn.attack>0 &&
-                        aiPawn.range>=Math.abs(aiPawn.positionX-playerPawn.positionX)&&
+        ArrayList<Pawn>aiPawns=makeAiArraylist();
+        ArrayList<Pawn>playerPawns=makePlayerArraylist();
+        outerloop:
+        for (Pawn aiPawn : aiPawns) {
+            for(Pawn playerPawn: playerPawns){
+                //search for attack on same X
+                if((aiPawn.attack>0 &&
                         aiPawn.range>=Math.abs(aiPawn.positionY-playerPawn.positionY)) &&
-                        (aiPawn.positionX==playerPawn.positionX || aiPawn.positionY==playerPawn.positionY )){
+                        (aiPawn.positionX==playerPawn.positionX )){
                     playerPawn.health=playerPawn.health-aiPawn.attack;
                     customLog("Received "+aiPawn.attack+" damage");
                     if(playerPawn.health<=0){
                         graveyard.add(playerPawn);
                     }
                     itsPlayerOneTurn=true;
-                }else if(playerPawn.friendly&&
-                        playerPawn.positionX==aiPawn.positionX&&
-                        aiPawn.speed<=playerPawn.positionY-1){
-                    aiPawn.positionY=aiPawn.positionY+aiPawn.speed;
+                    break outerloop;
+                    //search for attack on same Y
+                }else if ((aiPawn.attack>0 &&
+                        aiPawn.range>=Math.abs(aiPawn.positionX-playerPawn.positionX)) &&
+                        (aiPawn.positionY==playerPawn.positionY )){
+                    playerPawn.health=playerPawn.health-aiPawn.attack;
+                    customLog("Received "+aiPawn.attack+" damage");
+                    if(playerPawn.health<=0){
+                        graveyard.add(playerPawn);
+                    }
                     itsPlayerOneTurn=true;
-
-                }else if(playerPawn.friendly&&
-                        playerPawn.positionX==aiPawn.positionX&&
-                        aiPawn.speed>=playerPawn.positionY-1){
+                    break outerloop;
+                    //approach  on same X from high Y NOT enough speed
+                }else if(playerPawn.positionX==aiPawn.positionX&&
+                        aiPawn.speed<=Math.abs(playerPawn.positionY-aiPawn.positionY-1)&&
+                        aiPawn.positionY>playerPawn.positionY){
                     aiPawn.positionY=aiPawn.positionY-aiPawn.speed;
                     itsPlayerOneTurn=true;
-
-                }else if(playerPawn.friendly&&
-                        playerPawn.positionY==aiPawn.positionY&&
-                        aiPawn.speed<=playerPawn.positionX-1){
-                    aiPawn.positionX=aiPawn.positionX+aiPawn.speed;
+                    break outerloop;
+                    //approach  on same X from low Y NOT enough speed
+                }else if(playerPawn.positionX==aiPawn.positionX&&
+                        aiPawn.speed<=Math.abs(playerPawn.positionY-aiPawn.positionY-1)&&
+                        aiPawn.positionY<playerPawn.positionY){
+                    aiPawn.positionY=playerPawn.positionY+aiPawn.speed;
                     itsPlayerOneTurn=true;
-
-                }else if(playerPawn.friendly&&
-                        playerPawn.positionY==aiPawn.positionY&&
-                        aiPawn.speed>=playerPawn.positionX-1){
-                    aiPawn.positionX=aiPawn.positionX-aiPawn.speed;
+                    break outerloop;
+                    //approach  on same X from low enough speed
+                }else if(playerPawn.positionX==aiPawn.positionX&&
+                        aiPawn.speed>=Math.abs(playerPawn.positionY-aiPawn.positionY-1)&&
+                        aiPawn.positionY<playerPawn.positionY){
+                    aiPawn.positionY=playerPawn.positionY-1;
                     itsPlayerOneTurn=true;
+                    break outerloop;
+                    //approach  on same X from low Y enough speed
+                }else if(playerPawn.positionX==aiPawn.positionX&&
+                        aiPawn.speed>=Math.abs(playerPawn.positionY-aiPawn.positionY-1)&&
+                        aiPawn.positionY>playerPawn.positionY){
+                    aiPawn.positionY=playerPawn.positionY+1;
+                    itsPlayerOneTurn=true;
+                    break outerloop;
+                    //approach close on X
+                }else if(aiPawn.speed>=Math.abs(playerPawn.positionX-aiPawn.positionX)){
+                    aiPawn.positionX=playerPawn.positionX;
+                    itsPlayerOneTurn=true;
+                    break outerloop;
+                    //approach close on Y
+                }else if(aiPawn.speed>=Math.abs(playerPawn.positionY-aiPawn.positionY)){
+                    aiPawn.positionY=playerPawn.positionY;
+                    itsPlayerOneTurn=true;
+                    break outerloop;
 
                 }
             }
 
         }
         pawns.removeAll(graveyard);
+    }
+
+    private ArrayList<Pawn> makePlayerArraylist() {
+        ArrayList<Pawn>temp=new ArrayList<Pawn>();
+        for (Pawn p : pawns){
+            if(p.friendly) {
+                temp.add(p);
+            }
+        }
+        return temp;
+    }
+
+    private ArrayList<Pawn> makeAiArraylist() {
+        ArrayList<Pawn>temp=new ArrayList<Pawn>();
+        for (Pawn p : pawns){
+            if(!p.friendly) {
+                temp.add(p);
+            }
+        }
+        return temp;
+    }
+
+    private void makeAndShortTwoArraylists(ArrayList<Pawn> aiPawns, ArrayList<Pawn> playerPawns) {
+
     }
 
     private void controlCheck() {
