@@ -29,6 +29,7 @@ public class GameplayScreen implements Screen {
 
     private float tileHeight;
     ArrayList<Pawn> pawns;
+    ArrayList<Pawn> graveyard;
     private boolean actionSelect = false;
 
     ArrayList<FloorTile> floor;
@@ -53,13 +54,18 @@ public class GameplayScreen implements Screen {
 
     @Override
     public void show() {
+        graveyard = new ArrayList<Pawn>();
         pawns = new ArrayList<Pawn>();
         floor = new ArrayList<FloorTile>();
-        pawns.add(new Knight(0, 0, tool));
-        pawns.add(new Archer(1, 1, tool));
-        pawns.add(new Ninja(2, 1, tool));
-        pawns.add(new Shield(1, 2, tool));
-        pawns.add(new Wizard(1, 3, tool));
+        pawns.add(new Knight(0, 0, tool, true));
+        pawns.add(new Archer(1, 1, tool, true));
+        pawns.add(new Ninja(2, 1, tool, true));
+        pawns.add(new Shield(1, 2, tool, true));
+
+        pawns.add(new Wizard(4, 4, tool, false));
+        pawns.add(new Knight(3, 3, tool, false));
+        pawns.add(new Archer(4, 3, tool, false));
+        pawns.add(new Shield(3, 4, tool, false));
 
         makeFloor();
     }
@@ -84,18 +90,18 @@ public class GameplayScreen implements Screen {
 
     private void controlCheck() {
         for (Pawn p : pawns) {
-            if (p.isTouched() && p.selected) {
+            if (p.isTouched() && p.selected && p.friendly) {
                 p.selected = false;
                 actionSelect = false;
                 break;
-            } else if (p.isTouched()&&actionSelect == false) {
+            } else if (p.isTouched() && actionSelect == false && p.friendly) {
                 p.selected = true;
                 actionSelect = true;
                 break;
             } else if (p.selected) {
                 for (FloorTile f : floor) {
                     if (f.isButtonTouched()) {
-                        if (checkIfTileIsFree(f) && checkIfCloseEnough(f,p)) {
+                        if (checkIfTileIsFree(f) && checkIfCloseEnough(f, p)) {
                             p.positionX = f.buttonX;
                             p.positionY = f.buttonY;
                             p.selected = false;
@@ -105,17 +111,34 @@ public class GameplayScreen implements Screen {
 
                     }
                 }
+            } else if (actionSelect && !p.friendly && p.isTouched()) {
+                for (Pawn attacker : pawns) {
+                    if (attacker.selected &&
+                            attacker.speed >= Math.abs(attacker.positionX - p.positionX)
+                            && attacker.speed >= Math.abs(attacker.positionY - p.positionY)) {
+                        p.health=p.health-attacker.attack;
+                        if(p.health<=0){
+                            graveyard.add(p);
+
+
+                        }
+
+                    }
+                }
+
             }
+
         }
+        pawns.removeAll(graveyard);
     }
 
-    private boolean checkIfCloseEnough(FloorTile f,Pawn p) {
-        boolean closeEnough=false;
-        if(p.speed>=Math.abs(p.positionX-f.buttonX) && p.speed>=Math.abs(p.positionY-f.buttonY)){
-            if(p.positionX==f.buttonX || p.positionY==f.buttonY){
-                closeEnough=true;
+    private boolean checkIfCloseEnough(FloorTile f, Pawn p) {
+        boolean closeEnough = false;
+        if (p.speed >= Math.abs(p.positionX - f.buttonX) && p.speed >= Math.abs(p.positionY - f.buttonY)) {
+            if (p.positionX == f.buttonX || p.positionY == f.buttonY) {
+                closeEnough = true;
             }
-        }else{
+        } else {
             customLog("cant reach");
         }
         return closeEnough;
@@ -127,7 +150,7 @@ public class GameplayScreen implements Screen {
             if (f.buttonX == p.positionX && f.buttonY == p.positionY) {
                 free = false;
                 break;
-            }else {
+            } else {
                 customLog("Cell not free");
             }
         }

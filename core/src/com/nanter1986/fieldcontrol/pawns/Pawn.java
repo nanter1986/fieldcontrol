@@ -21,6 +21,7 @@ public abstract class Pawn {
     public int attack;
     public int speed;
     public int range;
+    public boolean friendly;
 
     DisplayToolkit tool;
 

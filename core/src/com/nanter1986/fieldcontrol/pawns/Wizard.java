@@ -9,7 +9,7 @@ import com.nanter1986.fieldcontrol.DisplayToolkit;
  */
 
 public class Wizard extends Pawn{
-    public Wizard(int x,int y, DisplayToolkit tool) {
+    public Wizard(int x,int y, DisplayToolkit tool,boolean isFriendly) {
         this.tool=tool;
         this.texture=new Texture(Gdx.files.internal("wizhat.png"));
         this.attack=8;
@@ -19,5 +19,6 @@ public class Wizard extends Pawn{
         this.positionX=x;
         this.positionY=y;
         this.width=tool.scW/6;
+        this.friendly=isFriendly;
     }
 }
