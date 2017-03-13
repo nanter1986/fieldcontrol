@@ -60,8 +60,8 @@ public class GameplayScreen implements Screen {
         floor = new ArrayList<FloorTile>();
         pawns.add(new Knight(0, 0, tool, true));
         pawns.add(new Archer(1, 1, tool, true));
-        pawns.add(new Ninja(2, 1, tool, true));
-        pawns.add(new Shield(1, 2, tool, true));
+        pawns.add(new Ninja(0, 1, tool, true));
+        pawns.add(new Wizard(1, 0, tool, true));
 
         pawns.add(new Wizard(4, 4, tool, false));
         pawns.add(new Knight(3, 3, tool, false));
@@ -73,6 +73,7 @@ public class GameplayScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        checkForEndOfGame();
         if(itsPlayerOneTurn){
             controlCheck();
         }else{
@@ -90,8 +91,19 @@ public class GameplayScreen implements Screen {
         }
         for (Pawn p : pawns) {
             p.appear();
+            p.isHovered();
         }
         tool.batch.end();
+    }
+
+    private void checkForEndOfGame() {
+        ArrayList<Pawn>aiPawns=makeAiArraylist();
+        ArrayList<Pawn>playerPawns=makePlayerArraylist();
+        if(aiPawns.size()==0){
+            customLog("Player won");
+        }else if(playerPawns.size()==0){
+            customLog("AI won");
+        }
     }
 
     private void moveByAI() {
@@ -104,6 +116,7 @@ public class GameplayScreen implements Screen {
                 if((aiPawn.attack>0 &&
                         aiPawn.range>=Math.abs(aiPawn.positionY-playerPawn.positionY)) &&
                         (aiPawn.positionX==playerPawn.positionX )){
+                    customLog("1");
                     playerPawn.health=playerPawn.health-aiPawn.attack;
                     customLog("Received "+aiPawn.attack+" damage");
                     if(playerPawn.health<=0){
@@ -115,6 +128,7 @@ public class GameplayScreen implements Screen {
                 }else if ((aiPawn.attack>0 &&
                         aiPawn.range>=Math.abs(aiPawn.positionX-playerPawn.positionX)) &&
                         (aiPawn.positionY==playerPawn.positionY )){
+                    customLog("2");
                     playerPawn.health=playerPawn.health-aiPawn.attack;
                     customLog("Received "+aiPawn.attack+" damage");
                     if(playerPawn.health<=0){
@@ -125,47 +139,69 @@ public class GameplayScreen implements Screen {
                     //approach  on same X from high Y NOT enough speed
                 }else if(playerPawn.positionX==aiPawn.positionX&&
                         aiPawn.speed<=Math.abs(playerPawn.positionY-aiPawn.positionY-1)&&
-                        aiPawn.positionY>playerPawn.positionY){
+                        aiPawn.positionY>playerPawn.positionY
+                        && checkIfcellIsFree(aiPawn.positionX,aiPawn.positionY-aiPawn.speed)){
+                    customLog("3");
                     aiPawn.positionY=aiPawn.positionY-aiPawn.speed;
                     itsPlayerOneTurn=true;
                     break outerloop;
                     //approach  on same X from low Y NOT enough speed
                 }else if(playerPawn.positionX==aiPawn.positionX&&
                         aiPawn.speed<=Math.abs(playerPawn.positionY-aiPawn.positionY-1)&&
-                        aiPawn.positionY<playerPawn.positionY){
+                        aiPawn.positionY<playerPawn.positionY
+                        && checkIfcellIsFree(aiPawn.positionX,aiPawn.positionY+aiPawn.speed)){
+                    customLog("4");
                     aiPawn.positionY=playerPawn.positionY+aiPawn.speed;
                     itsPlayerOneTurn=true;
                     break outerloop;
                     //approach  on same X from low enough speed
                 }else if(playerPawn.positionX==aiPawn.positionX&&
                         aiPawn.speed>=Math.abs(playerPawn.positionY-aiPawn.positionY-1)&&
-                        aiPawn.positionY<playerPawn.positionY){
+                        aiPawn.positionY<playerPawn.positionY
+                        && checkIfcellIsFree(aiPawn.positionX,aiPawn.positionY-1)){
+                    customLog("5");
                     aiPawn.positionY=playerPawn.positionY-1;
                     itsPlayerOneTurn=true;
                     break outerloop;
                     //approach  on same X from low Y enough speed
                 }else if(playerPawn.positionX==aiPawn.positionX&&
                         aiPawn.speed>=Math.abs(playerPawn.positionY-aiPawn.positionY-1)&&
-                        aiPawn.positionY>playerPawn.positionY){
+                        aiPawn.positionY>playerPawn.positionY
+                        && checkIfcellIsFree(aiPawn.positionX,aiPawn.positionY+1)){
+                    customLog("6");
                     aiPawn.positionY=playerPawn.positionY+1;
                     itsPlayerOneTurn=true;
                     break outerloop;
                     //approach close on X
                 }else if(aiPawn.speed>=Math.abs(playerPawn.positionX-aiPawn.positionX)){
+                    customLog("7");
                     aiPawn.positionX=playerPawn.positionX;
                     itsPlayerOneTurn=true;
                     break outerloop;
                     //approach close on Y
                 }else if(aiPawn.speed>=Math.abs(playerPawn.positionY-aiPawn.positionY)){
+                    customLog("8");
                     aiPawn.positionY=playerPawn.positionY;
                     itsPlayerOneTurn=true;
                     break outerloop;
-
+                }else{
+                    customLog("101");
                 }
             }
 
         }
         pawns.removeAll(graveyard);
+    }
+
+    private boolean checkIfcellIsFree(int x, int y) {
+        boolean free=true;
+        for(Pawn p:pawns){
+            if(p.positionX==x && p.positionY==y){
+                free=false;
+                break;
+            }
+        }
+        return free;
     }
 
     private ArrayList<Pawn> makePlayerArraylist() {
@@ -219,14 +255,16 @@ public class GameplayScreen implements Screen {
             } else if (actionSelect && !p.friendly && p.isTouched()) {
                 for (Pawn attacker : pawns) {
                     if (attacker.selected &&
-                            attacker.speed >= Math.abs(attacker.positionX - p.positionX)
-                            && attacker.speed >= Math.abs(attacker.positionY - p.positionY)) {
+                            attacker.range >= Math.abs(attacker.positionX - p.positionX)
+                            && attacker.range >= Math.abs(attacker.positionY - p.positionY)) {
                         p.health=p.health-attacker.attack;
                         customLog("Dealt "+attacker.attack+" damage");
                         if(p.health<=0){
                             graveyard.add(p);
                         }
                         itsPlayerOneTurn=false;
+                        actionSelect=false;
+                        attacker.selected=false;
 
                     }
                 }
@@ -243,8 +281,6 @@ public class GameplayScreen implements Screen {
             if (p.positionX == f.buttonX || p.positionY == f.buttonY) {
                 closeEnough = true;
             }
-        } else {
-            customLog("cant reach");
         }
         return closeEnough;
     }
@@ -255,8 +291,6 @@ public class GameplayScreen implements Screen {
             if (f.buttonX == p.positionX && f.buttonY == p.positionY) {
                 free = false;
                 break;
-            } else {
-                customLog("Cell not free");
             }
         }
 

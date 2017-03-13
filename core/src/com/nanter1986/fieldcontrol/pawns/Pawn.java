@@ -71,5 +71,31 @@ public abstract class Pawn {
         return touched;
     }
 
+    public void isHovered(){
+        double realX=(tool.scW/5)*(positionX+0.5);
+        double realY=(tool.scH-tool.scW)+(tool.scW/5)*(positionY)+(tool.scW/5)*0.5;
+        int x= Gdx.input.getX();
+        int y= Gdx.input.getY();
+        double leftWall=realX-width/2;
+        double rightWall=realX+width/2;
+        double topWall=tool.scH-realY-width/2;
+        double bottomWall=tool.scH-realY+width/2;
+        if(x>leftWall &&
+                x<rightWall &&
+                y>topWall &&
+                y<bottomWall){
+            int ceiling=tool.scH-tool.scW;
+            tool.font.draw(tool.batch,"Attack:"+this.attack,0,ceiling*1/8);
+            tool.font.draw(tool.batch,"Range:"+this.range,0,ceiling*2/8);
+            tool.font.draw(tool.batch,"Speed:"+this.speed,0,ceiling*3/8);
+            tool.font.draw(tool.batch,"Health:"+this.health,0,ceiling*4/8);
+            if(this.selected){
+                tool.font.draw(tool.batch,"Selected",0,ceiling*5/8);
+            }
+
+
+        }
+    }
+
 
 }
