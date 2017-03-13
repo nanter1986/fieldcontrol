@@ -31,6 +31,7 @@ public class GameplayScreen implements Screen {
     ArrayList<Pawn> pawns;
     ArrayList<Pawn> graveyard;
     private boolean actionSelect = false;
+    private boolean itsPlayerOneTurn=true;
 
     ArrayList<FloorTile> floor;
 
@@ -72,7 +73,12 @@ public class GameplayScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        controlCheck();
+        if(itsPlayerOneTurn){
+            controlCheck();
+        }else{
+            moveByAI();
+        }
+
         tool.camera.update();
         Gdx.gl.glClearColor(BACKGROUND_COLOR.r, BACKGROUND_COLOR.g,
                 BACKGROUND_COLOR.b, BACKGROUND_COLOR.a);
@@ -86,6 +92,51 @@ public class GameplayScreen implements Screen {
             p.appear();
         }
         tool.batch.end();
+    }
+
+    private void moveByAI() {
+        for (Pawn aiPawn : pawns) {
+            for(Pawn playerPawn: pawns){
+                if((playerPawn.friendly&&
+                        aiPawn.attack>0 &&
+                        aiPawn.range>=Math.abs(aiPawn.positionX-playerPawn.positionX)&&
+                        aiPawn.range>=Math.abs(aiPawn.positionY-playerPawn.positionY)) &&
+                        (aiPawn.positionX==playerPawn.positionX || aiPawn.positionY==playerPawn.positionY )){
+                    playerPawn.health=playerPawn.health-aiPawn.attack;
+                    customLog("Received "+aiPawn.attack+" damage");
+                    if(playerPawn.health<=0){
+                        graveyard.add(playerPawn);
+                    }
+                    itsPlayerOneTurn=true;
+                }else if(playerPawn.friendly&&
+                        playerPawn.positionX==aiPawn.positionX&&
+                        aiPawn.speed<=playerPawn.positionY-1){
+                    aiPawn.positionY=aiPawn.positionY+aiPawn.speed;
+                    itsPlayerOneTurn=true;
+
+                }else if(playerPawn.friendly&&
+                        playerPawn.positionX==aiPawn.positionX&&
+                        aiPawn.speed>=playerPawn.positionY-1){
+                    aiPawn.positionY=aiPawn.positionY-aiPawn.speed;
+                    itsPlayerOneTurn=true;
+
+                }else if(playerPawn.friendly&&
+                        playerPawn.positionY==aiPawn.positionY&&
+                        aiPawn.speed<=playerPawn.positionX-1){
+                    aiPawn.positionX=aiPawn.positionX+aiPawn.speed;
+                    itsPlayerOneTurn=true;
+
+                }else if(playerPawn.friendly&&
+                        playerPawn.positionY==aiPawn.positionY&&
+                        aiPawn.speed>=playerPawn.positionX-1){
+                    aiPawn.positionX=aiPawn.positionX-aiPawn.speed;
+                    itsPlayerOneTurn=true;
+
+                }
+            }
+
+        }
+        pawns.removeAll(graveyard);
     }
 
     private void controlCheck() {
@@ -106,6 +157,7 @@ public class GameplayScreen implements Screen {
                             p.positionY = f.buttonY;
                             p.selected = false;
                             actionSelect = false;
+                            itsPlayerOneTurn=false;
                         }
 
 
@@ -117,11 +169,11 @@ public class GameplayScreen implements Screen {
                             attacker.speed >= Math.abs(attacker.positionX - p.positionX)
                             && attacker.speed >= Math.abs(attacker.positionY - p.positionY)) {
                         p.health=p.health-attacker.attack;
+                        customLog("Dealt "+attacker.attack+" damage");
                         if(p.health<=0){
                             graveyard.add(p);
-
-
                         }
+                        itsPlayerOneTurn=false;
 
                     }
                 }
